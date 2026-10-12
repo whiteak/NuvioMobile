@@ -42,6 +42,22 @@ jobs:
             touch local.properties
           fi
 
+      - name: Prepare Reel Room signing
+        env:
+          KEYSTORE: ${{ secrets.REELROOM_KEYSTORE }}
+          KEY_PASSWORD: ${{ secrets.REELROOM_KEY_PASSWORD }}
+        run: |
+          # Reel Room: sign with the personal key when available so test builds install over releases.
+          if [ -n "$KEYSTORE" ] && [ -n "$KEY_PASSWORD" ]; then
+            printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/reelroom.jks"
+            {
+              echo "NUVIO_RELEASE_STORE_FILE=$RUNNER_TEMP/reelroom.jks"
+              echo "NUVIO_RELEASE_STORE_PASSWORD=$KEY_PASSWORD"
+              echo "NUVIO_RELEASE_KEY_ALIAS=reelroom"
+              echo "NUVIO_RELEASE_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> local.properties
+          fi
+
       - name: Build fullDebug APK
         run: ./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore --stacktrace
 
