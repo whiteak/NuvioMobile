@@ -50,6 +50,7 @@ import com.nuvio.app.features.details.seriesPrimaryAction
 import com.nuvio.app.features.home.components.HomeCatalogRowSection
 import com.nuvio.app.features.home.components.HomeContinueWatchingSection
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
+import com.nuvio.app.features.home.components.EditionHomeBanner
 import com.nuvio.app.features.home.components.HomeHeroReservedSpace
 import com.nuvio.app.features.home.components.HomeHeroSection
 import com.nuvio.app.features.home.components.HomeSkeletonHero
@@ -1019,6 +1020,11 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+
+            // Ethereal: edition artwork banner.
+            item(key = "edition_banner", contentType = "edition_banner") {
+                EditionHomeBanner()
             }
 
             when {
