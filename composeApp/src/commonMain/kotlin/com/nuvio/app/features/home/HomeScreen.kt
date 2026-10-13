@@ -18,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,7 +30,6 @@ import com.nuvio.app.core.ui.ScreenActivityEffect
 import com.nuvio.app.core.ui.NuvioScreen
 import com.nuvio.app.core.ui.NuvioNetworkOfflineCard
 import com.nuvio.app.core.ui.nuvioSafeBottomPadding
-import com.nuvio.app.core.ui.rememberHeroStretchState
 import com.nuvio.app.core.ui.rememberPosterCardStyleUiState
 import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
 import com.nuvio.app.features.addons.AddonRepository
@@ -975,19 +973,20 @@ fun HomeScreen(
             }
         }
 
-        val heroStretchState = rememberHeroStretchState(homeListState)
-        val heroStretchModifier = if (showHeroSlot) {
-            Modifier.nestedScroll(heroStretchState.nestedScrollConnection)
-        } else {
-            Modifier
-        }
+        // Ethereal: the edition banner leads Home, so the hero no longer stretches from the top edge.
+        val heroStretchModifier = Modifier
 
         NuvioScreen(
             modifier = Modifier.fillMaxSize().then(heroStretchModifier),
             horizontalPadding = 0.dp,
-            topPadding = if (showHeroSlot) 0.dp else null,
+            topPadding = null,
             listState = homeListState,
         ) {
+            // Ethereal: edition artwork banner first, above the hero.
+            item(key = "edition_banner", contentType = "edition_banner") {
+                EditionHomeBanner()
+            }
+
             if (showHeroSlot) {
                 item(key = "home_hero", contentType = "hero") {
                     Crossfade(
@@ -1007,8 +1006,7 @@ fun HomeScreen(
                                 modifier = Modifier,
                                 viewportHeight = maxHeight,
                                 mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
-                                listState = homeListState,
-                                stretchPx = { heroStretchState.stretchPx },
+                                listState = null,
                                 onItemClick = onPosterClick,
                             )
 
@@ -1020,11 +1018,6 @@ fun HomeScreen(
                         }
                     }
                 }
-            }
-
-            // Ethereal: edition artwork banner.
-            item(key = "edition_banner", contentType = "edition_banner") {
-                EditionHomeBanner()
             }
 
             when {

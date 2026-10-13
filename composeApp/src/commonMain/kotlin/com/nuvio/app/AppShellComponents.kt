@@ -213,6 +213,7 @@ internal fun AppLoadingContent(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
+        EditionLoadingArt()
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

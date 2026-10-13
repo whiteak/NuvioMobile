@@ -426,6 +426,7 @@ internal fun AppGate(
                             .background(MaterialTheme.nuvio.colors.background),
                         contentAlignment = Alignment.Center,
                     ) {
+                        EditionLoadingArt()
                         NuvioLoadingIndicator()
                     }
                 }

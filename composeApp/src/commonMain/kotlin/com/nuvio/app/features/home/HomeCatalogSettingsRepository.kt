@@ -34,11 +34,8 @@ data class HomeCatalogSettingsItem(
         get() = customTitle.ifBlank { defaultTitle }
 }
 
-/** Ethereal: Home opens on the edition banner, so the hero slideshow starts switched off. */
-internal const val EDITION_HERO_DEFAULT = false
-
 data class HomeCatalogSettingsUiState(
-    val heroEnabled: Boolean = EDITION_HERO_DEFAULT,
+    val heroEnabled: Boolean = true,
     val showCatalogType: Boolean = true,
     val hideUnreleasedContent: Boolean = false,
     val items: List<HomeCatalogSettingsItem> = emptyList(),
@@ -84,8 +81,7 @@ private data class StoredHomeCatalogPreference(
 
 @Serializable
 private data class StoredHomeCatalogSettingsPayload(
-    val heroEnabled: Boolean = EDITION_HERO_DEFAULT,
-    val editionBannerDefaultsApplied: Boolean = false,
+    val heroEnabled: Boolean = true,
     val showCatalogType: Boolean = true,
     val hideUnreleasedContent: Boolean = false,
     val items: List<StoredHomeCatalogPreference> = emptyList(),
@@ -113,14 +109,14 @@ object HomeCatalogSettingsRepository {
         set(value) {
             preferencesRef.value = value
         }
-    private var heroEnabled = EDITION_HERO_DEFAULT
+    private var heroEnabled = true
     private var showCatalogType = true
     private var hideUnreleasedContent = false
 
     fun onProfileChanged() {
         hasLoaded = false
         preferences = emptyMap()
-        heroEnabled = EDITION_HERO_DEFAULT
+        heroEnabled = true
         showCatalogType = true
         hideUnreleasedContent = false
         definitions = emptyList()
@@ -137,7 +133,7 @@ object HomeCatalogSettingsRepository {
         lastCatalogSync = null
         lastCollectionSync = null
         preferences = emptyMap()
-        heroEnabled = EDITION_HERO_DEFAULT
+        heroEnabled = true
         showCatalogType = true
         hideUnreleasedContent = false
         _uiState.value = HomeCatalogSettingsUiState()
@@ -251,7 +247,7 @@ object HomeCatalogSettingsRepository {
 
     fun resetToDefaults() {
         ensureLoaded()
-        heroEnabled = EDITION_HERO_DEFAULT
+        heroEnabled = true
         showCatalogType = true
         hideUnreleasedContent = false
         preferences = emptyMap()
@@ -302,8 +298,7 @@ object HomeCatalogSettingsRepository {
         }.getOrNull()
 
         if (parsedPayload != null) {
-            // Ethereal: switch the hero off once on existing installs so the edition banner leads Home.
-            heroEnabled = parsedPayload.heroEnabled && parsedPayload.editionBannerDefaultsApplied
+            heroEnabled = parsedPayload.heroEnabled
             showCatalogType = parsedPayload.showCatalogType
             hideUnreleasedContent = parsedPayload.hideUnreleasedContent
             preferences = parsedPayload.items.associateBy { it.key }
@@ -415,7 +410,6 @@ object HomeCatalogSettingsRepository {
             json.encodeToString(
                 StoredHomeCatalogSettingsPayload(
                     heroEnabled = heroEnabled,
-                    editionBannerDefaultsApplied = true,
                     showCatalogType = showCatalogType,
                     hideUnreleasedContent = hideUnreleasedContent,
                     items = preferences.values.sortedBy { it.order },
