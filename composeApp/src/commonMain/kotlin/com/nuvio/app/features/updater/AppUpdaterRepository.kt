@@ -10,6 +10,9 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.updates_github_api_error
 import org.jetbrains.compose.resources.getString
 
+/** Reel Room: name prefix of this edition's release APKs. */
+internal const val RELEASE_ASSET_PREFIX = "ReelRoom-"
+
 @Serializable
 internal data class GitHubReleaseDto(
     @SerialName("tag_name") val tagName: String? = null,
@@ -93,6 +96,9 @@ internal object AppUpdaterRepository {
         val apkAssets = assets.filter { asset ->
             asset.name.endsWith(".apk", ignoreCase = true) ||
                 asset.contentType == "application/vnd.android.package-archive"
+        }.let { apks ->
+            // Reel Room: each app edition only installs APKs published under its own name.
+            apks.filter { it.name.startsWith(RELEASE_ASSET_PREFIX, ignoreCase = true) }.ifEmpty { apks }
         }
         for (abi in supportedAbis) {
             apkAssets.firstOrNull { it.name.contains(abi, ignoreCase = true) }?.let { return it }
