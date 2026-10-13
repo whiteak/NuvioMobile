@@ -1,8 +1,11 @@
 package com.nuvio.app
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.ImageLoader
@@ -45,26 +48,30 @@ fun App(
     appGateController: AppGateController? = null,
 ) {
     AppEnvironment {
-        AppGate(
-            initialTab = initialTab,
-            initialRoute = initialRoute,
-            useNativeNavigation = useNativeNavigation,
-            useNativeTabBar = useNativeTabBar,
-            useTabletFloatingTabBar = useTabletFloatingTabBar,
-            ownsAppRuntime = ownsAppRuntime,
-            bypassAppGate = bypassAppGate,
-            renderMainContent = true,
-            onNavigate = onNavigate,
-            onGoBack = onGoBack,
-            onReplace = onReplace,
-            onActivate = onActivate,
-            onAppReady = onAppReady,
-            onMainContentMountChanged = null,
-            onMainContentVisibleChanged = null,
-            onTabTitles = onTabTitles,
-            nativeProfileSwitcherController = nativeProfileSwitcherController,
-            appGateController = appGateController,
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            AppGate(
+                initialTab = initialTab,
+                initialRoute = initialRoute,
+                useNativeNavigation = useNativeNavigation,
+                useNativeTabBar = useNativeTabBar,
+                useTabletFloatingTabBar = useTabletFloatingTabBar,
+                ownsAppRuntime = ownsAppRuntime,
+                bypassAppGate = bypassAppGate,
+                renderMainContent = true,
+                onNavigate = onNavigate,
+                onGoBack = onGoBack,
+                onReplace = onReplace,
+                onActivate = onActivate,
+                onAppReady = onAppReady,
+                onMainContentMountChanged = null,
+                onMainContentVisibleChanged = null,
+                onTabTitles = onTabTitles,
+                nativeProfileSwitcherController = nativeProfileSwitcherController,
+                appGateController = appGateController,
+            )
+            // Ethereal: the edition's opening picture stays up for a moment on launch.
+            EditionIntroOverlay()
+        }
     }
 }
 
