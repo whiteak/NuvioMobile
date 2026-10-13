@@ -14,10 +14,13 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.edition_home_banner
 import org.jetbrains.compose.resources.painterResource
 
+/** Ethereal: whether the banner runs edge to edge under the status bar (Requiem's lace banner sits below it). */
+const val EDITION_BANNER_FULL_BLEED = true
+
 /** Ethereal: the edition's artwork banner at the top of Home (each edition ships its own image). */
 @Composable
 fun EditionHomeBanner(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxWidth().padding(bottom = 8.dp), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.fillMaxWidth().padding(bottom = if (EDITION_BANNER_FULL_BLEED) 0.dp else 8.dp), contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(Res.drawable.edition_home_banner),
             contentDescription = null,

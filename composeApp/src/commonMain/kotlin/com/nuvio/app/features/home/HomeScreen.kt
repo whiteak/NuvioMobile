@@ -48,6 +48,7 @@ import com.nuvio.app.features.details.seriesPrimaryAction
 import com.nuvio.app.features.home.components.HomeCatalogRowSection
 import com.nuvio.app.features.home.components.HomeContinueWatchingSection
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
+import com.nuvio.app.features.home.components.EDITION_BANNER_FULL_BLEED
 import com.nuvio.app.features.home.components.EditionHomeBanner
 import com.nuvio.app.features.home.components.HomeHeroReservedSpace
 import com.nuvio.app.features.home.components.HomeHeroSection
@@ -979,7 +980,7 @@ fun HomeScreen(
         NuvioScreen(
             modifier = Modifier.fillMaxSize().then(heroStretchModifier),
             horizontalPadding = 0.dp,
-            topPadding = null,
+            topPadding = if (EDITION_BANNER_FULL_BLEED) 0.dp else null,
             listState = homeListState,
         ) {
             // Ethereal: edition artwork banner first, above the hero.
