@@ -11,7 +11,7 @@ import nuvio.composeapp.generated.resources.updates_github_api_error
 import org.jetbrains.compose.resources.getString
 
 /** Reel Room: name prefix of this edition's release APKs. */
-internal const val RELEASE_ASSET_PREFIX = "ReelRoom-"
+internal const val RELEASE_ASSET_PREFIX = "Ethereal-"
 
 @Serializable
 internal data class GitHubReleaseDto(

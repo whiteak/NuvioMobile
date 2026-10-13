@@ -116,15 +116,18 @@ object ThemeColors {
         backgroundCard = Color(0xFF1A1F24),
     )
 
+    // Reel Room: the Violet slot is restyled as the Ethereal theme (twilight violet with opal highlights).
     val Violet = ThemeColorPalette(
-        secondary = Color(0xFF8E24AA),
-        secondaryVariant = Color(0xFF6A1B9A),
-        nativeAccentHex = "#8E24AA",
-        focusRing = Color(0xFFAB47BC),
-        focusBackground = Color(0xFF2D1A3D),
-        background = Color(0xFF0D0D0F),
-        backgroundElevated = Color(0xFF1A1A1E),
-        backgroundCard = Color(0xFF1F1A24),
+        secondary = Color(0xFFB9A6FF),
+        secondaryVariant = Color(0xFF7D63D9),
+        accentGradient = listOf(Color(0xFFCFE9FF), Color(0xFFE7DCFF), Color(0xFFFFD9F0)),
+        nativeAccentHex = "#B9A6FF",
+        onSecondary = Color(0xFF1B1530),
+        focusRing = Color(0xFFE7DCFF),
+        focusBackground = Color(0xFF2A2150),
+        background = Color(0xFF0E0B1A),
+        backgroundElevated = Color(0xFF18132B),
+        backgroundCard = Color(0xFF1F1938),
     )
 
     val Emerald = ThemeColorPalette(

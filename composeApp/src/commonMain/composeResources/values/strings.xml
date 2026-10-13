@@ -336,7 +336,7 @@
     <string name="collections_pinned">Pinned</string>
     <string name="collections_tab_all">All</string>
     <string name="collections_your_collections">Your Collections</string>
-    <string name="compose_about_made_with">Reel Room · built on Nuvio by Tapframe and friends</string>
+    <string name="compose_about_made_with">Ethereal · built on Nuvio by Tapframe and friends</string>
     <string name="compose_about_version_format">Version %1$s (%2$s)</string>
     <string name="compose_action_off">Off</string>
     <string name="compose_action_on">On</string>
@@ -1405,7 +1405,7 @@
     <string name="theme_emerald">Emerald</string>
     <string name="theme_ocean">Ocean</string>
     <string name="theme_rose">Rose</string>
-    <string name="theme_violet">Violet</string>
+    <string name="theme_violet">Ethereal</string>
     <string name="theme_white">White</string>
     <string name="theme_custom">Custom</string>
     <string name="custom_theme_title">Your custom gradient</string>
