@@ -47,6 +47,9 @@ actual object AddonStorage {
             .filter { it.isNotEmpty() }
             .toList()
 
+    actual fun hasStoredAddonList(profileId: Int): Boolean =
+        preferences?.contains("${addonUrlsKey}_$profileId") == true
+
     actual fun saveInstalledAddonUrls(profileId: Int, urls: List<String>) {
         preferences
             ?.edit()
