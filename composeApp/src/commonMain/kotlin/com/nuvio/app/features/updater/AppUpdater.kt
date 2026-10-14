@@ -65,18 +65,16 @@ class AppUpdaterController internal constructor(
                     downloadJob?.cancel()
                     _uiState.value.downloadedApkPath?.let(AppUpdaterPlatform::deleteDownloadedApk)
                     _uiState.value = AppUpdaterUiState(updateChannel = channel)
-                    if (!AppUpdaterPlatform.isDebugBuild) {
-                        checkForUpdates(force = true, showNoUpdateFeedback = false)
-                    }
+                    // Reel Room: releases are debuggable builds, so check regardless.
+                    checkForUpdates(force = true, showNoUpdateFeedback = false)
                 }
             }
         }
     }
 
     fun ensureAutoCheckStarted() {
-        if (autoCheckStarted || !AppFeaturePolicy.inAppUpdaterEnabled ||
-            !AppUpdaterPlatform.isSupported || AppUpdaterPlatform.isDebugBuild
-        ) {
+        // Reel Room: releases are debuggable builds, so the launch check must not skip debug builds.
+        if (autoCheckStarted || !AppFeaturePolicy.inAppUpdaterEnabled || !AppUpdaterPlatform.isSupported) {
             return
         }
         autoCheckStarted = true
