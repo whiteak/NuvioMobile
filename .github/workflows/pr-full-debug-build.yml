@@ -42,18 +42,19 @@ jobs:
             touch local.properties
           fi
 
-      - name: Prepare Reel Room signing
+      - name: Prepare signing
         env:
-          KEYSTORE: ${{ secrets.REELROOM_KEYSTORE }}
-          KEY_PASSWORD: ${{ secrets.REELROOM_KEY_PASSWORD }}
+          KEYSTORE: ${{ secrets.SIGNING_KEYSTORE || secrets.REELROOM_KEYSTORE }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD || secrets.REELROOM_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGNING_KEYSTORE && 'ethereal' || 'reelroom' }}
         run: |
-          # Reel Room: sign with the personal key when available so test builds install over releases.
+          # Ethereal: sign with the personal key when available so test builds install over releases.
           if [ -n "$KEYSTORE" ] && [ -n "$KEY_PASSWORD" ]; then
-            printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/reelroom.jks"
+            printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/signing.jks"
             {
-              echo "NUVIO_RELEASE_STORE_FILE=$RUNNER_TEMP/reelroom.jks"
+              echo "NUVIO_RELEASE_STORE_FILE=$RUNNER_TEMP/signing.jks"
               echo "NUVIO_RELEASE_STORE_PASSWORD=$KEY_PASSWORD"
-              echo "NUVIO_RELEASE_KEY_ALIAS=reelroom"
+              echo "NUVIO_RELEASE_KEY_ALIAS=$KEY_ALIAS"
               echo "NUVIO_RELEASE_KEY_PASSWORD=$KEY_PASSWORD"
             } >> local.properties
           fi

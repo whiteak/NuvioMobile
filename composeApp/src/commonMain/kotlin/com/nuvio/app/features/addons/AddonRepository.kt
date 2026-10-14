@@ -48,8 +48,8 @@ private data class AddonPushItem(
 
 private const val ADDON_PUSH_DEBOUNCE_MS = 500L
 
-/** Reel Room: addons preinstalled on a fresh profile (metadata and subtitles). */
-private val ReelRoomDefaultAddonUrls = listOf(
+/** Ethereal: addons preinstalled on a fresh profile (metadata and subtitles). */
+private val EditionDefaultAddonUrls = listOf(
     "https://v3-cinemeta.strem.io/manifest.json",
     "https://opensubtitles-v3.strem.io/manifest.json",
 )
@@ -74,8 +74,8 @@ object AddonRepository {
         log.d { "initialize() — loading local addons for profile $currentProfileId" }
 
         if (!AddonStorage.hasStoredAddonList(currentProfileId)) {
-            // Reel Room: start new profiles with the built-in default addons.
-            AddonStorage.saveInstalledAddonUrls(currentProfileId, ReelRoomDefaultAddonUrls)
+            // Ethereal: start new profiles with the built-in default addons.
+            AddonStorage.saveInstalledAddonUrls(currentProfileId, EditionDefaultAddonUrls)
         }
         val storedUrls = dedupeManifestUrls(AddonStorage.loadInstalledAddonUrls(currentProfileId))
         val enabledByUrl = loadLocalEnabledStates()

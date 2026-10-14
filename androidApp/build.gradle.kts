@@ -120,7 +120,7 @@ android {
 
     buildTypes {
         getByName("debug") {
-            // Reel Room: sign debug builds with the personal release key when one is configured,
+            // Ethereal: sign debug builds with the personal release key when one is configured,
             // so CI builds can update each other in place.
             if (releaseKeystore != null && releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null) {
                 signingConfig = signingConfigs.getByName("release")

@@ -10,7 +10,7 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.updates_github_api_error
 import org.jetbrains.compose.resources.getString
 
-/** Reel Room: name prefix of this edition's release APKs. */
+/** Ethereal: name prefix of this edition's release APKs. */
 internal const val RELEASE_ASSET_PREFIX = "Ethereal-"
 
 @Serializable
@@ -97,7 +97,7 @@ internal object AppUpdaterRepository {
             asset.name.endsWith(".apk", ignoreCase = true) ||
                 asset.contentType == "application/vnd.android.package-archive"
         }.let { apks ->
-            // Reel Room: each app edition only installs APKs published under its own name.
+            // Ethereal: each app edition only installs APKs published under its own name.
             apks.filter { it.name.startsWith(RELEASE_ASSET_PREFIX, ignoreCase = true) }.ifEmpty { apks }
         }
         for (abi in supportedAbis) {

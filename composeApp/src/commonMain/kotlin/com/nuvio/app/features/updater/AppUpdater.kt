@@ -65,7 +65,7 @@ class AppUpdaterController internal constructor(
                     downloadJob?.cancel()
                     _uiState.value.downloadedApkPath?.let(AppUpdaterPlatform::deleteDownloadedApk)
                     _uiState.value = AppUpdaterUiState(updateChannel = channel)
-                    // Reel Room: releases are debuggable builds, so check regardless.
+                    // Ethereal: releases are debuggable builds, so check regardless.
                     checkForUpdates(force = true, showNoUpdateFeedback = false)
                 }
             }
@@ -73,7 +73,7 @@ class AppUpdaterController internal constructor(
     }
 
     fun ensureAutoCheckStarted() {
-        // Reel Room: releases are debuggable builds, so the launch check must not skip debug builds.
+        // Ethereal: releases are debuggable builds, so the launch check must not skip debug builds.
         if (autoCheckStarted || !AppFeaturePolicy.inAppUpdaterEnabled || !AppUpdaterPlatform.isSupported) {
             return
         }
