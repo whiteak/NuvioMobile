@@ -9,9 +9,7 @@ sed -i 's#<string>Ethereal</string>#<string>Requiem</string>#' iosApp/iosApp/Inf
 sed -i 's#<color name="app_icon_background">[^<]*</color>#<color name="app_icon_background">\#F2F2F4</color>#' composeApp/src/androidMain/res/values/colors.xml
 sed -i 's#<color name="edition_splash_background">[^<]*</color>#<color name="edition_splash_background">\#0B0B0C</color>#' composeApp/src/androidMain/res/values/colors.xml
 sed -i 's#"com.nuviodebug.com"#"com.requiem.app"#' androidApp/build.gradle.kts
-sed -i 's#EDITION_BANNER_FULL_BLEED = true#EDITION_BANNER_FULL_BLEED = false#' composeApp/src/commonMain/kotlin/com/nuvio/app/features/home/components/EditionHomeBanner.kt
 sed -i 's#RELEASE_ASSET_PREFIX = "Ethereal-"#RELEASE_ASSET_PREFIX = "Requiem-"#' composeApp/src/commonMain/kotlin/com/nuvio/app/features/updater/AppUpdaterRepository.kt
 grep -q 'com.requiem.app' androidApp/build.gradle.kts
-grep -q 'EDITION_BANNER_FULL_BLEED = false' composeApp/src/commonMain/kotlin/com/nuvio/app/features/home/components/EditionHomeBanner.kt
 grep -q '"Requiem-"' composeApp/src/commonMain/kotlin/com/nuvio/app/features/updater/AppUpdaterRepository.kt
 echo "Requiem edition applied."
