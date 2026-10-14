@@ -16,6 +16,9 @@ import nuvio.composeapp.generated.resources.theme_graphite
 import nuvio.composeapp.generated.resources.theme_custom
 import org.jetbrains.compose.resources.StringResource
 
+// Reel Room: the theme an edition opens in until a theme is picked in Settings (Requiem sets WHITE).
+val EDITION_DEFAULT_THEME = AppTheme.VIOLET
+
 enum class AppTheme {
     GOLD,
     JADE,
