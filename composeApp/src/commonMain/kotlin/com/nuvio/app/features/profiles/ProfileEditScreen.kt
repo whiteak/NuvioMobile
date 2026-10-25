@@ -73,8 +73,12 @@ fun ProfileEditScreen(
     val fallbackColorHex = currentProfile?.avatarColorHex ?: PROFILE_COLORS.first()
 
     var name by rememberSaveable { mutableStateOf(currentProfile?.name ?: "") }
-    var selectedAvatarId by rememberSaveable { mutableStateOf(currentProfile?.avatarId) }
-    var avatarUrl by rememberSaveable { mutableStateOf(currentProfile?.avatarUrl.orEmpty()) }
+    var selectedAvatarId by rememberSaveable {
+        mutableStateOf(currentProfile?.avatarId ?: editionAvatarForUrl(currentProfile?.avatarUrl)?.id)
+    }
+    var avatarUrl by rememberSaveable {
+        mutableStateOf(currentProfile?.avatarUrl?.takeIf { editionAvatarForUrl(it) == null }.orEmpty())
+    }
     var selectedBackgroundId by rememberSaveable { mutableStateOf(currentProfile?.profileBackgroundId) }
     var selectedBackgroundUrl by rememberSaveable { mutableStateOf(currentProfile?.profileBackgroundUrl) }
     var usesPrimaryAddons by rememberSaveable { mutableStateOf(currentProfile?.usesPrimaryAddons ?: false) }
@@ -90,6 +94,7 @@ fun ProfileEditScreen(
     val canChooseBackground = !isNew && memberAccess.entitlements.includes(CosmeticEntitlement.PROFILE_BACKGROUNDS)
 
     val avatars by AvatarRepository.avatars.collectAsStateWithLifecycle()
+    val pickerAvatars = remember(avatars) { EDITION_AVATARS + avatars }
     LaunchedEffect(Unit) {
         AvatarRepository.refreshAvatars()
     }
@@ -104,10 +109,11 @@ fun ProfileEditScreen(
 
     val customAvatarUrl = remember(avatarUrl) { normalizedAvatarUrl(avatarUrl) }
     val avatarUrlIsInvalid = avatarUrl.isNotBlank() && customAvatarUrl == null
-    val selectedAvatarItem = remember(selectedAvatarId, avatars) {
-        selectedAvatarId?.let { id -> avatars.find { it.id == id } }
+    val selectedAvatarItem = remember(selectedAvatarId, pickerAvatars) {
+        selectedAvatarId?.let { id -> pickerAvatars.find { it.id == id } }
     }
     val visibleAvatarItem = if (customAvatarUrl == null) selectedAvatarItem else null
+    val editionAvatarUrl = if (customAvatarUrl == null) editionAvatar(selectedAvatarId)?.storagePath else null
     val previewAccent = remember(visibleAvatarItem, fallbackColorHex) {
         parseHexColor(visibleAvatarItem?.bgColor ?: fallbackColorHex)
     }
@@ -223,7 +229,7 @@ fun ProfileEditScreen(
                     )
 
                     AvatarPicker(
-                        avatars = avatars,
+                        avatars = pickerAvatars,
                         selectedAvatarId = selectedAvatarId.takeIf { customAvatarUrl == null },
                         onAvatarSelected = { avatar ->
                             avatarUrl = ""
@@ -287,8 +293,8 @@ fun ProfileEditScreen(
                             ProfileRepository.createProfile(
                                 name = name,
                                 avatarColorHex = avatarColorHex,
-                                avatarId = if (customAvatarUrl == null) selectedAvatarId else null,
-                                avatarUrl = customAvatarUrl,
+                                avatarId = if (customAvatarUrl == null && editionAvatarUrl == null) selectedAvatarId else null,
+                                avatarUrl = customAvatarUrl ?: editionAvatarUrl,
                                 usesPrimaryAddons = usesPrimaryAddons,
                             )
                         } else {
@@ -296,8 +302,8 @@ fun ProfileEditScreen(
                                 profileIndex = currentProfile!!.profileIndex,
                                 name = name,
                                 avatarColorHex = avatarColorHex,
-                                avatarId = if (customAvatarUrl == null) selectedAvatarId else null,
-                                avatarUrl = customAvatarUrl,
+                                avatarId = if (customAvatarUrl == null && editionAvatarUrl == null) selectedAvatarId else null,
+                                avatarUrl = customAvatarUrl ?: editionAvatarUrl,
                                 profileBackgroundId = selectedBackgroundId,
                                 profileBackgroundUrl = selectedBackgroundUrl,
                                 usesPrimaryAddons = usesPrimaryAddons,
