@@ -11,7 +11,9 @@ sed -i 's#<color name="edition_splash_background">[^<]*</color>#<color name="edi
 sed -i 's#"com.nuviodebug.com"#"com.requiem.app"#' androidApp/build.gradle.kts
 sed -i "s#val EDITION_DEFAULT_THEME = AppTheme.VIOLET#val EDITION_DEFAULT_THEME = AppTheme.WHITE#" composeApp/src/commonMain/kotlin/com/nuvio/app/core/ui/AppTheme.kt
 sed -i 's#RELEASE_ASSET_PREFIX = "Ethereal-"#RELEASE_ASSET_PREFIX = "Requiem-"#' composeApp/src/commonMain/kotlin/com/nuvio/app/features/updater/AppUpdaterRepository.kt
+sed -i 's#const val EDITION_AVATARS_ENABLED = true#const val EDITION_AVATARS_ENABLED = false#' composeApp/src/commonMain/kotlin/com/nuvio/app/features/profiles/EditionAvatars.kt
 grep -q 'com.requiem.app' androidApp/build.gradle.kts
 grep -q "EDITION_DEFAULT_THEME = AppTheme.WHITE" composeApp/src/commonMain/kotlin/com/nuvio/app/core/ui/AppTheme.kt
 grep -q '"Requiem-"' composeApp/src/commonMain/kotlin/com/nuvio/app/features/updater/AppUpdaterRepository.kt
+grep -q 'EDITION_AVATARS_ENABLED = false' composeApp/src/commonMain/kotlin/com/nuvio/app/features/profiles/EditionAvatars.kt
 echo "Requiem edition applied."
