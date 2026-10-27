@@ -1,6 +1,8 @@
 package com.nuvio.app.core.build
 
 actual object AppFeaturePolicy {
+    actual val donationActionsEnabled: Boolean = false
+    actual val donationProgressEnabled: Boolean = true
     actual val pluginsEnabled: Boolean = false
     actual val supportersContributorsPageEnabled: Boolean = true
     actual val accountDeletionEnabled: Boolean = false

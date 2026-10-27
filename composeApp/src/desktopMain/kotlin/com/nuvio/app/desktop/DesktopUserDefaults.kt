@@ -16,6 +16,9 @@ import kotlinx.serialization.json.longOrNull
  * Values live in one JSON file in the app's data folder (see [DesktopPaths]).
  */
 class NSUserDefaults private constructor(private val file: File) {
+    /** A separate named store, like iOS suites: <name>.json next to settings.json. */
+    constructor(suiteName: String) : this(File(DesktopPaths.dataDir, "${suiteName.replace(Regex("[^A-Za-z0-9._-]"), "_")}.json"))
+
     private val lock = Any()
     private val values: MutableMap<String, Any> = load()
 
@@ -59,6 +62,9 @@ class NSUserDefaults private constructor(private val file: File) {
     fun setDouble(value: Double, forKey: String) = update { put(forKey, value) }
     fun removeObjectForKey(key: String) = update { remove(key) }
     fun synchronize(): Boolean = true
+
+    /** Clears this whole store (the name is ignored: one store per file). */
+    fun removePersistentDomainForName(@Suppress("UNUSED_PARAMETER") name: String) = update { clear() }
 
     private inline fun update(change: MutableMap<String, Any>.() -> Unit) {
         synchronized(lock) {

@@ -23,7 +23,7 @@ internal actual object DownloadsPlatformDownloader {
         onFailure: (message: String) -> Unit,
         onPaused: () -> Unit,
     ): DownloadsTaskHandle {
-        @Volatile var cancelled = false
+        val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
         val target = File(directory, request.destinationFileName)
         val part = File(directory, request.destinationFileName + ".part")
         thread(isDaemon = true, name = "download-${request.destinationFileName}") {
@@ -52,7 +52,7 @@ internal actual object DownloadsPlatformDownloader {
                         var done = existing
                         var lastReport = 0L
                         while (true) {
-                            if (cancelled) {
+                            if (cancelled.get()) {
                                 onPaused()
                                 return@thread
                             }
@@ -72,12 +72,12 @@ internal actual object DownloadsPlatformDownloader {
                 if (!part.renameTo(target)) error("Couldn't finish the file")
                 onSuccess(target.toURI().toString(), target.length())
             } catch (e: Exception) {
-                if (cancelled) onPaused() else onFailure(e.message ?: "Download failed")
+                if (cancelled.get()) onPaused() else onFailure(e.message ?: "Download failed")
             }
         }
         return object : DownloadsTaskHandle {
             override fun cancel() {
-                cancelled = true
+                cancelled.set(true)
             }
         }
     }
