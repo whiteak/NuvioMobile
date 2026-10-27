@@ -438,11 +438,15 @@ private class DesktopVlcController(private val player: EmbeddedMediaPlayer) : Pl
 
 private fun List<TrackDescription>.realTracks(): List<TrackDescription> = filter { it.id() >= 0 }
 
-/** libVLC wants file paths as file: URIs; web addresses pass through. */
+/** libVLC wants local files as file:///C:/... URIs; web addresses pass through. */
 private fun mediaLocation(url: String): String {
+    // Java's File.toURI gives file:/C:/..., which libVLC can't open, so local files are rebuilt with Path.toUri.
+    if (url.startsWith("file:", ignoreCase = true)) {
+        return runCatching { File(java.net.URI(url)).toPath().toUri().toString() }.getOrDefault(url)
+    }
     if (url.contains("://")) return url
     val file = File(url)
-    return if (file.isAbsolute) file.toURI().toString() else url
+    return if (file.isAbsolute) file.toPath().toUri().toString() else url
 }
 
 /** libVLC labels tracks like "Track 1 - [English]"; pull out the bracketed language. */
