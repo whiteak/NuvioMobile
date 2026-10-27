@@ -537,6 +537,8 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.ktor.client.okhttp)
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:${libs.versions.kotlinx.coroutines.get()}")
+                // Built-in player: libVLC, shipped inside the installer (see desktop.yml).
+                implementation("uk.co.caprica:vlcj:4.8.3")
             }
         }
         commonTest.dependencies {
@@ -585,6 +587,8 @@ compose.desktop {
             )
             packageName = providers.gradleProperty("nuvio.desktop.appName").orNull ?: "Nuvio"
             packageVersion = providers.gradleProperty("nuvio.desktop.version").orNull ?: "1.0.0"
+            // desktop-resources/windows/vlc holds libVLC when the CI installer job has downloaded it.
+            appResourcesRootDir.set(project.layout.projectDirectory.dir("desktop-resources"))
             modules("java.net.http", "java.sql", "jdk.unsupported", "java.naming")
             windows {
                 menuGroup = packageName

@@ -54,6 +54,19 @@ jobs:
       - name: Empty local.properties
         shell: bash
         run: touch local.properties
+      - name: Download libVLC for the built-in player
+        shell: pwsh
+        run: |
+          $v = "3.0.21"
+          Invoke-WebRequest "https://download.videolan.org/pub/videolan/vlc/$v/win64/vlc-$v-win64.zip" -OutFile vlc.zip
+          Expand-Archive vlc.zip -DestinationPath vlc-extract
+          $src = "vlc-extract/vlc-$v"
+          $dst = "composeApp/desktop-resources/windows/vlc"
+          New-Item -ItemType Directory -Force $dst | Out-Null
+          Copy-Item "$src/libvlc.dll", "$src/libvlccore.dll" $dst
+          Copy-Item -Recurse "$src/plugins" $dst
+          # Interface, scripting and visualiser plugins aren't used by an embedded player.
+          Remove-Item -Recurse -Force "$dst/plugins/gui", "$dst/plugins/lua", "$dst/plugins/visualization", "$dst/plugins/control" -ErrorAction SilentlyContinue
       - name: Build the Windows installer
         run: ./gradlew --no-daemon :composeApp:packageMsi
       - uses: actions/upload-artifact@v5
