@@ -355,6 +355,13 @@ kotlin {
         }
     }
     
+    // Windows/macOS/Linux desktop app (Compose Desktop on the JVM).
+    jvm("desktop") {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
     val iosTargets = listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -525,6 +532,13 @@ kotlin {
             implementation(libs.supabase.realtime)
             implementation(libs.reorderable)
         }
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.ktor.client.okhttp)
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:${libs.versions.kotlinx.coroutines.get()}")
+            }
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.kotlinx.coroutines.get()}")
@@ -557,4 +571,26 @@ configurations.all {
     exclude(group = "androidx.media3", module = "media3-datasource")
     exclude(group = "androidx.media3", module = "media3-datasource-okhttp")
     exclude(group = "androidx.media3", module = "media3-extractor")
+}
+
+// Desktop app: `./gradlew :composeApp:run` to try it, `packageMsi` (on Windows) for an installer.
+compose.desktop {
+    application {
+        mainClass = "com.nuvio.app.MainKt"
+        jvmArgs += listOf("-Dnuvio.appName=" + (providers.gradleProperty("nuvio.desktop.appName").orNull ?: "Nuvio"))
+        nativeDistributions {
+            targetFormats(
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe,
+            )
+            packageName = providers.gradleProperty("nuvio.desktop.appName").orNull ?: "Nuvio"
+            packageVersion = providers.gradleProperty("nuvio.desktop.version").orNull ?: "1.0.0"
+            modules("java.net.http", "java.sql", "jdk.unsupported", "java.naming")
+            windows {
+                menuGroup = packageName
+                perUserInstall = true
+                upgradeUuid = providers.gradleProperty("nuvio.desktop.upgradeUuid").orNull ?: "6f1d5a43-1c5e-4c64-9a7e-2f3b8d4e9a10"
+            }
+        }
+    }
 }

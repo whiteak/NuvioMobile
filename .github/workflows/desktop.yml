@@ -1,0 +1,57 @@
+name: Desktop build
+
+# Builds the desktop (Windows) app: compiles on every push to a desktop work branch,
+# and makes a Windows installer when run by hand.
+
+on:
+  push:
+    branches: ["claude/**", "desktop/**"]
+    paths:
+      - "composeApp/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - ".github/workflows/desktop.yml"
+  workflow_dispatch:
+    inputs:
+      installer:
+        description: Also build the Windows installer
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Compile the desktop app
+        run: ./gradlew --no-daemon --continue :composeApp:compileKotlinDesktop
+
+  installer:
+    if: github.event_name == 'workflow_dispatch' && inputs.installer
+    needs: compile
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Build the Windows installer
+        run: ./gradlew --no-daemon :composeApp:packageMsi
+      - uses: actions/upload-artifact@v5
+        with:
+          name: windows-installer
+          path: composeApp/build/compose/binaries/main/msi/*.msi
