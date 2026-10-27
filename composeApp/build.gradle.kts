@@ -588,7 +588,8 @@ compose.desktop {
             modules("java.net.http", "java.sql", "jdk.unsupported", "java.naming")
             windows {
                 menuGroup = packageName
-                perUserInstall = true
+                // A per-user MSI still targeted Program Files and failed without admin rights; install per machine so Windows asks for elevation.
+                perUserInstall = false
                 upgradeUuid = providers.gradleProperty("nuvio.desktop.upgradeUuid").orNull ?: "6f1d5a43-1c5e-4c64-9a7e-2f3b8d4e9a10"
             }
         }
