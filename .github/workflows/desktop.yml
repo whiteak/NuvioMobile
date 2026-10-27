@@ -35,6 +35,8 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
+      - name: Empty local.properties (no keys needed to compile)
+        run: touch local.properties
       - name: Compile the desktop app
         run: ./gradlew --no-daemon --continue :composeApp:compileKotlinDesktop
 
@@ -49,6 +51,9 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
+      - name: Empty local.properties
+        shell: bash
+        run: touch local.properties
       - name: Build the Windows installer
         run: ./gradlew --no-daemon :composeApp:packageMsi
       - uses: actions/upload-artifact@v5
