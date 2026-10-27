@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.desktop.DesktopVlc
+import com.nuvio.app.desktop.NSUserDefaults
 import java.io.File
 import java.nio.ByteBuffer
 import java.util.Locale
@@ -118,6 +119,13 @@ actual fun PlatformPlayerSurface(
         if (startKey != null) onInitialPositionHandled(startKey, startMs != null)
     }
 
+    // Sound sync is remembered across videos: Bluetooth lag belongs to the headphones, not the film.
+    LaunchedEffect(player) {
+        val defaults = NSUserDefaults.standardUserDefaults
+        PlayerAudioSync.enable(defaults.integerForKey(AUDIO_DELAY_KEY).toInt()) { defaults.setInteger(it, forKey = AUDIO_DELAY_KEY) }
+        PlayerAudioSync.delayMs.collect { controller.setAudioDelayMs(it) }
+    }
+
     LaunchedEffect(playWhenReady) {
         if (playWhenReady) controller.play() else controller.pause()
     }
@@ -161,6 +169,8 @@ actual fun PlatformPlayerSurface(
 
 private const val DESKTOP_PLAYER_MISSING_MESSAGE =
     "The built-in player couldn't start because VLC's playback library is missing. Reinstall the app, or choose VLC under Settings › Playback › External player."
+
+private const val AUDIO_DELAY_KEY = "player.audioDelayMs"
 
 private const val DESKTOP_PLAYER_ERROR_MESSAGE = "This video couldn't be played."
 
@@ -219,6 +229,8 @@ private class DesktopVlcController(private val player: EmbeddedMediaPlayer) : Pl
     private val ended = AtomicBoolean(false)
     @Volatile private var buffering = true
     @Volatile private var lastUrl: String? = null
+    @Volatile private var audioDelayUs = 0L
+    @Volatile private var subtitleDelayUs = 0L
     private var lastOptions: Array<String> = emptyArray()
 
     val events = object : MediaPlayerEventAdapter() {
@@ -233,6 +245,11 @@ private class DesktopVlcController(private val player: EmbeddedMediaPlayer) : Pl
         override fun playing(mediaPlayer: MediaPlayer) {
             buffering = false
             ended.set(false)
+            // libVLC forgets delays when a new video starts; put them back (off its event thread).
+            mediaPlayer.submit {
+                mediaPlayer.audio().setDelay(audioDelayUs)
+                mediaPlayer.subpictures().setDelay(subtitleDelayUs)
+            }
         }
 
         override fun finished(mediaPlayer: MediaPlayer) {
@@ -407,8 +424,15 @@ private class DesktopVlcController(private val player: EmbeddedMediaPlayer) : Pl
         player.subpictures().setTrack(match.id())
     }
 
+    fun setAudioDelayMs(delayMs: Int) {
+        // libVLC counts in microseconds; positive plays the sound later.
+        audioDelayUs = delayMs * 1000L
+        player.audio().setDelay(audioDelayUs)
+    }
+
     override fun setSubtitleDelayMs(delayMs: Int) {
-        player.subpictures().setDelay(delayMs * 1000L)
+        subtitleDelayUs = delayMs * 1000L
+        player.subpictures().setDelay(subtitleDelayUs)
     }
 }
 

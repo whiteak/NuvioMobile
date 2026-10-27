@@ -23,10 +23,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.nuvio
@@ -92,6 +95,10 @@ fun AudioTrackModal(
                         }
                     }
                 }
+
+                if (PlayerAudioSync.supported) {
+                    AudioSyncRow()
+                }
             }
         }
     }
@@ -153,4 +160,64 @@ private fun AudioTrackRow(
             )
         }
     }
+}
+
+/** Shifts the sound against the picture; Bluetooth audio usually needs it earlier. */
+@Composable
+private fun AudioSyncRow() {
+    val delayMs by PlayerAudioSync.delayMs.collectAsState()
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "Sound sync",
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AudioSyncButton("Earlier") { PlayerAudioSync.setDelayMs(delayMs - PlayerAudioSync.STEP_MS) }
+            Text(
+                text = when {
+                    delayMs == 0 -> "In sync"
+                    delayMs < 0 -> "${-delayMs} ms earlier"
+                    else -> "$delayMs ms later"
+                },
+                color = Color.White,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+            )
+            AudioSyncButton("Later") { PlayerAudioSync.setDelayMs(delayMs + PlayerAudioSync.STEP_MS) }
+        }
+        if (delayMs != 0) {
+            Text(
+                text = "Reset",
+                color = Color.White.copy(alpha = 0.72f),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { PlayerAudioSync.setDelayMs(0) }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AudioSyncButton(label: String, onClick: () -> Unit) {
+    Text(
+        text = label,
+        color = Color.White,
+        style = MaterialTheme.typography.labelLarge,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.14f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    )
 }
