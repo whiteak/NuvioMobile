@@ -132,18 +132,40 @@ jobs:
           echo "$errors"
           echo "::error title=Build errors::$(printf '%s' "$errors" | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"
 
+      - name: Name the IPA
+        id: ipa
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ls -la app/build/ios-ipa || true
+          ipa="$(ls app/build/ios-ipa/*.ipa | head -n 1)"
+          cp "$ipa" "Requiem-iOS-${VERSION}.ipa"
+          ls -la "Requiem-iOS-${VERSION}.ipa"
+          echo "file=Requiem-iOS-${VERSION}.ipa" >> "$GITHUB_OUTPUT"
+
+      # Kept as a run download too, in case attaching to the release fails.
+      - name: Keep the IPA with the run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Requiem-iOS
+          path: ${{ steps.ipa.outputs.file }}
+          retention-days: 7
+
       - name: Attach to release
         env:
           TAG: ${{ steps.version.outputs.tag }}
-          VERSION: ${{ steps.version.outputs.version }}
+          FILE: ${{ steps.ipa.outputs.file }}
         run: |
-          ipa="$(find app/build/ios-ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
-          cp "$ipa" "Requiem-iOS-${VERSION}.ipa"
-          gh release upload "$TAG" "Requiem-iOS-${VERSION}.ipa" --repo "$GITHUB_REPOSITORY" --clobber
+          ok=
+          for i in 1 2 3 4; do
+            if out=$(gh release upload "$TAG" "$FILE" --repo "$GITHUB_REPOSITORY" --clobber 2>&1); then ok=1; break; fi
+            echo "$out"; echo "::warning title=Upload try $i failed::$(printf '%s' "$out" | tr '\n' ' ' | cut -c1-500)"
+            sleep $((i * 10))
+          done
+          [ -n "$ok" ] || exit 1
           {
             echo "## Requiem for iPhone"
             echo
-            echo "- File: Requiem-iOS-${VERSION}.ipa ($(du -h "Requiem-iOS-${VERSION}.ipa" | cut -f1))"
-            echo "- Release: ${TAG}"
-            echo "- Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Requiem-iOS-${VERSION}.ipa"
+            echo "- File: ${FILE} ($(du -h "$FILE" | cut -f1))"
+            echo "- Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${FILE}"
           } >> "$GITHUB_STEP_SUMMARY"
