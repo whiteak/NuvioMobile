@@ -114,6 +114,7 @@ jobs:
         run: |
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
+          bash editions/requiem/ios-old-sdk.sh "$PWD/app"
 
       - name: Prepare iOS dependencies
         run: ./app/scripts/prepare-ios-dependencies.sh
