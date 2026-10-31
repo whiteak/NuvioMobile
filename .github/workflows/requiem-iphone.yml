@@ -127,7 +127,7 @@ jobs:
         if: failure()
         run: |
           # As one annotation, so the errors can be read without the whole log.
-          errors=$(grep -E -A6 '^e: |error:|\* What went wrong' "$RUNNER_TEMP/build.log" | grep -v 'warning:' | cut -c1-300 | head -60 || true)
+          errors=$(grep -E -A6 '^e: |error:|\* What went wrong' "$RUNNER_TEMP/build.log" | grep -v 'warning:' | cut -c1-300 | head -200 || true)
           echo "$errors"
           echo "::error title=Build errors::$(printf '%s' "$errors" | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"
 
