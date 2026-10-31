@@ -1,0 +1,104 @@
+name: Build Requiem for iPhone
+
+# Manual only. Builds an unsigned Requiem IPA (sideload with SideStore/AltStore, which signs it
+# with the user's own Apple ID) and attaches it to the newest Ethereal/Requiem release.
+# The Android updaters only look at .apk files, so the extra .ipa does not affect them.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: requiem-iphone
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Requiem IPA
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      GRADLE_OPTS: -Dfile.encoding=UTF-8
+      IOS_CONFIGURATION: Release
+      KOTLIN_DAEMON_JVMARGS: -Xmx2048M
+      NUVIO_GRADLE_JVMARGS: -Xmx4608M -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=768M
+      NUVIO_KOTLIN_NATIVE_JVMARGS: -Xmx4608M
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache Kotlin Native
+        uses: actions/cache@v5
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: |
+            konan-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Use GNU sed (apply.sh is written for it)
+        run: |
+          brew install gnu-sed
+          echo "$(brew --prefix gnu-sed)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Pick version from the newest release
+        id: version
+        run: |
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 20 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[].tagName' | grep '^v' | head -n 1)
+          if [ -z "$tag" ]; then echo "No release to attach to." >&2; exit 1; fi
+          version="${tag#v}"
+          base_code=$(sed -n 's/^CURRENT_PROJECT_VERSION=//p' iosApp/Configuration/Version.xcconfig | tr -d '[:space:]')
+          n=$(printf '%s' "$version" | awk -F. '{ print ($4 == "" ? 0 : $4) }')
+          code=$(( base_code * 1000 + n ))
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Building Requiem $version for release $tag"
+
+      - name: Turn the checkout into Requiem
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          sed -i "s/^MARKETING_VERSION=.*/MARKETING_VERSION=$VERSION/; s/^CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=$VERSION_CODE/" iosApp/Configuration/Version.xcconfig
+          bash editions/requiem/apply.sh
+
+      - name: Verify Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Prepare iOS dependencies
+        run: ./scripts/prepare-ios-dependencies.sh
+
+      - name: Build unsigned IPA
+        run: ./scripts/build-ios-ipa.sh "${{ steps.version.outputs.version }}"
+
+      - name: Attach to release
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ipa="$(find build/ios-ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          cp "$ipa" "Requiem-iOS-${VERSION}.ipa"
+          gh release upload "$TAG" "Requiem-iOS-${VERSION}.ipa" --repo "$GITHUB_REPOSITORY" --clobber
+          {
+            echo "## Requiem for iPhone"
+            echo
+            echo "- File: Requiem-iOS-${VERSION}.ipa ($(du -h "Requiem-iOS-${VERSION}.ipa" | cut -f1))"
+            echo "- Release: ${TAG}"
+            echo "- Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Requiem-iOS-${VERSION}.ipa"
+          } >> "$GITHUB_STEP_SUMMARY"
