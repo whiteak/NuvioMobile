@@ -1,11 +1,20 @@
 name: Build Requiem for iPhone
 
-# Manual only. Builds an unsigned Requiem IPA (sideload with SideStore/AltStore, which signs it
+# Manual only. Requiem for iPhone is the full Prism phone app (whiteak/prism: mobile/ then ios/) built on the
+# NuvioMobile branch Prism uses, named Requiem with Requiem's pictures (editions/requiem/ios-on-prism.sh).
+# Builds an unsigned Requiem IPA (sideload with SideStore/AltStore, which signs it
 # with the user's own Apple ID) and attaches it to the newest Ethereal/Requiem release.
 # The Android updaters only look at .apk files, so the extra .ipa does not affect them.
 
 on:
   workflow_dispatch:
+    inputs:
+      prism_ref:
+        description: whiteak/prism branch or commit to build from
+        default: claude/project-thread-rs7nwb
+      app_ref:
+        description: NuvioMobile branch the app is built from (the one Prism uses)
+        default: claude/project-thread-lph2qt
 
 permissions:
   contents: write
@@ -29,8 +38,21 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Check out source
+      - name: Check out Requiem's files
         uses: actions/checkout@v6
+
+      - name: Check out the app
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.app_ref }}
+          path: app
+
+      - name: Check out Prism
+        uses: actions/checkout@v6
+        with:
+          repository: whiteak/prism
+          ref: ${{ inputs.prism_ref }}
+          path: prism
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -45,7 +67,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.konan
-          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('app/gradle/libs.versions.toml') }}
           restore-keys: |
             konan-${{ runner.os }}-${{ runner.arch }}-
 
@@ -61,7 +83,7 @@ jobs:
           tag=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 20 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[].tagName' | grep '^v' | head -n 1)
           if [ -z "$tag" ]; then echo "No release to attach to." >&2; exit 1; fi
           version="${tag#v}"
-          base_code=$(sed -n 's/^CURRENT_PROJECT_VERSION=//p' iosApp/Configuration/Version.xcconfig | tr -d '[:space:]')
+          base_code=$(sed -n 's/^CURRENT_PROJECT_VERSION=//p' app/iosApp/Configuration/Version.xcconfig | tr -d '[:space:]')
           n=$(printf '%s' "$version" | awk -F. '{ print ($4 == "" ? 0 : $4) }')
           code=$(( base_code * 1000 + n ))
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
@@ -69,13 +91,17 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "Building Requiem $version for release $tag"
 
-      - name: Turn the checkout into Requiem
+      - name: Turn the app into Requiem (Prism inside)
         env:
           VERSION: ${{ steps.version.outputs.version }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
-          sed -i "s/^MARKETING_VERSION=.*/MARKETING_VERSION=$VERSION/; s/^CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=$VERSION_CODE/" iosApp/Configuration/Version.xcconfig
-          bash editions/requiem/apply.sh
+          sed -i "s/^MARKETING_VERSION=.*/MARKETING_VERSION=$VERSION/; s/^CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=$VERSION_CODE/" app/iosApp/Configuration/Version.xcconfig
+          # Prism's extra app icons are Prism pictures, so Requiem leaves them out.
+          : > prism/mobile/icons.txt
+          bash prism/mobile/apply.sh "$PWD/app"
+          bash prism/ios/apply.sh "$PWD/app"
+          bash editions/requiem/ios-on-prism.sh "$PWD/app"
 
       - name: Verify Apple toolchain
         run: |
@@ -83,17 +109,24 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
 
       - name: Prepare iOS dependencies
-        run: ./scripts/prepare-ios-dependencies.sh
+        run: ./app/scripts/prepare-ios-dependencies.sh
 
       - name: Build unsigned IPA
-        run: ./scripts/build-ios-ipa.sh "${{ steps.version.outputs.version }}"
+        run: |
+          set -o pipefail
+          ./app/scripts/build-ios-ipa.sh "${{ steps.version.outputs.version }}" 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Show build errors
+        if: failure()
+        run: |
+          grep -nE '^e: |error:|\* What went wrong|Exception' "$RUNNER_TEMP/build.log" | grep -v 'warning:' | head -80 || true
 
       - name: Attach to release
         env:
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          ipa="$(find build/ios-ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          ipa="$(find app/build/ios-ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
           cp "$ipa" "Requiem-iOS-${VERSION}.ipa"
           gh release upload "$TAG" "Requiem-iOS-${VERSION}.ipa" --repo "$GITHUB_REPOSITORY" --clobber
           {
