@@ -95,6 +95,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
         run: |
           sed -i "s/^MARKETING_VERSION=.*/MARKETING_VERSION=$VERSION/; s/^CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=$VERSION_CODE/" app/iosApp/Configuration/Version.xcconfig
           # Prism's extra app icons are Prism pictures, so Requiem leaves them out.
@@ -102,6 +103,12 @@ jobs:
           bash prism/mobile/apply.sh "$PWD/app"
           bash prism/ios/apply.sh "$PWD/app"
           bash editions/requiem/ios-on-prism.sh "$PWD/app"
+          # The build reads its settings from local.properties (it must exist). Trakt sign-in needs the TRAKT_CLIENT_ID secret.
+          touch app/local.dev.properties
+          {
+            echo "TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID}"
+            echo "TRAKT_REDIRECT_URI=https://whiteak.github.io/Trakt-return/"
+          } > app/local.properties
 
       - name: Verify Apple toolchain
         run: |
@@ -119,7 +126,10 @@ jobs:
       - name: Show build errors
         if: failure()
         run: |
-          grep -nE '^e: |error:|\* What went wrong|Exception' "$RUNNER_TEMP/build.log" | grep -v 'warning:' | head -80 || true
+          # As one annotation, so the errors can be read without the whole log.
+          errors=$(grep -E -A6 '^e: |error:|\* What went wrong' "$RUNNER_TEMP/build.log" | grep -v 'warning:' | cut -c1-300 | head -60 || true)
+          echo "$errors"
+          echo "::error title=Build errors::$(printf '%s' "$errors" | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"
 
       - name: Attach to release
         env:
