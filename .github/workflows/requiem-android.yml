@@ -49,6 +49,9 @@ jobs:
           echo "code=$(( base_code * 1000 + n ))" >> "$GITHUB_OUTPUT"
           echo "base=$base" >> "$GITHUB_OUTPUT"
           echo "Building $base.$n"
+          # A draft left by a stopped run of the same version goes first.
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq ".[] | select(.draft and .tag_name == \"v$base.$n\") | .id" |
+            while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id" || true; done
           gh release create "v$base.$n" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
             --title "Ethereal $base.$n (building)" --notes "Still building."
 
@@ -174,7 +177,7 @@ jobs:
   tidy:
     name: Remove the draft if a build failed
     needs: [version, ethereal, requiem, publish]
-    if: failure() && needs.version.result == 'success'
+    if: (failure() || cancelled()) && needs.version.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - env:
