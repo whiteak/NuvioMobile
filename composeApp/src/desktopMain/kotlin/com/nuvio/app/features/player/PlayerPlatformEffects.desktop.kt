@@ -35,3 +35,7 @@ actual fun rememberIsInPictureInPicture(): Boolean = false
 // Brightness and volume swipes are a touch-screen thing; the desktop uses keys and the mouse wheel.
 @Composable
 internal actual fun rememberPlatformPlayerGestureController(): PlayerGestureController? = null
+
+// The PC keeps one sound sync for every output (see PlayerAudioSync), not one per device.
+@Composable
+internal actual fun rememberAudioOutputKey(enabled: Boolean): String? = null

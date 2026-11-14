@@ -123,7 +123,7 @@ actual fun PlatformPlayerSurface(
     LaunchedEffect(player) {
         val defaults = NSUserDefaults.standardUserDefaults
         PlayerAudioSync.enable(defaults.integerForKey(AUDIO_DELAY_KEY).toInt()) { defaults.setInteger(it, forKey = AUDIO_DELAY_KEY) }
-        PlayerAudioSync.delayMs.collect { controller.setAudioDelayMs(it) }
+        PlayerAudioSync.delayMs.collect { controller.setSoundSyncMs(it) }
     }
 
     LaunchedEffect(playWhenReady) {
@@ -424,7 +424,10 @@ private class DesktopVlcController(private val player: EmbeddedMediaPlayer) : Pl
         player.subpictures().setTrack(match.id())
     }
 
-    fun setAudioDelayMs(delayMs: Int) {
+    // Nuvio's own audio delay (phone only) stays off here; the PC's Sound sync drives [setSoundSyncMs].
+    override fun setAudioDelayMs(delayMs: Int) {}
+
+    fun setSoundSyncMs(delayMs: Int) {
         // libVLC counts in microseconds; positive plays the sound later.
         audioDelayUs = delayMs * 1000L
         player.audio().setDelay(audioDelayUs)
